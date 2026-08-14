@@ -1,0 +1,71 @@
+/* ============================================================
+   Muhammad Shafi S — Portfolio
+   Production build of the approved Claude Design.
+   Palette: #060606 ground · #EE1B24 accent · #F2F2F2 text
+   ============================================================ */
+
+html, body { margin: 0; padding: 0; background: #060606; }
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-family: Barlow, system-ui, sans-serif;
+  color: #F2F2F2;
+}
+* { box-sizing: border-box; }
+
+/* [hidden] must beat inline display:flex used throughout the design markup */
+[hidden] { display: none !important; }
+
+a { color: #EE1B24; text-decoration: none; }
+a:hover { color: #ff5b61; }
+::selection { background: #EE1B24; color: #fff; }
+input, textarea, button { font-family: inherit; }
+input::placeholder, textarea::placeholder { color: rgba(255,255,255,.34); }
+
+button { -webkit-appearance: none; appearance: none; }
+
+/* Keyboard focus ring for accessibility (does not affect mouse users) */
+[data-nav]:focus-visible,
+[data-action]:focus-visible,
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #EE1B24;
+  outline-offset: 3px;
+}
+
+/* ---------- Entrance / ambient animations (from approved design) ---------- */
+@keyframes rise    { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+@keyframes riseSm  { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+@keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
+@keyframes wipeUp  { from { opacity:0; transform:translateY(0.16em); clip-path:inset(0 0 105% 0); } to { opacity:1; transform:none; clip-path:inset(-0.2em -0.2em -0.2em -0.2em); } }
+@keyframes lineX   { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+@keyframes portraitIn { from { opacity:0; transform:translateX(-46%) scale(1.06); } to { opacity:1; } }
+@keyframes d90     { from { stroke-dashoffset:339; } to { stroke-dashoffset:34; } }
+@keyframes d80     { from { stroke-dashoffset:339; } to { stroke-dashoffset:68; } }
+@keyframes d45     { from { stroke-dashoffset:339; } to { stroke-dashoffset:187; } }
+@keyframes pulseDot { 0%,100% { opacity:1; } 50% { opacity:.25; } }
+
+/* ---------- Page transition (snappy, cinematic) ---------- */
+#stage { transition: opacity .22s ease, transform .22s ease; will-change: opacity, transform; }
+#stage.is-exiting { opacity: 0; transform: translateY(8px); }
+
+/* ---------- Home layout toggling (wide >= 860px) ----------
+   The inactive layout is force-hidden; the active one keeps its
+   inline display. !important beats the design's inline display. */
+body:not(.is-narrow) .home-narrow { display: none !important; }
+body.is-narrow .home-wide { display: none !important; }
+
+/* Utility to show hidden top-nav burger via flex (element uses [hidden] otherwise) */
+#topBurger:not([hidden]) { display: flex; }
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    clip-path: none !important;
+  }
+  #stage.is-exiting { opacity: 1; transform: none; }
+}
