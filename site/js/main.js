@@ -7,21 +7,55 @@
 
   /* ---------------------------------------------------------
      REELS
-     To publish a real reel, drop the file in assets/reels/ and
-     set `src` (and optional `poster`) on the matching entry.
-     Until then each card shows a graceful 9:16 placeholder.
-     Aspect ratio is locked to exact 9:16 everywhere.
+     Only finished, published reels are listed here. To add one,
+     drop the file in assets/reels/ and append an entry with its
+     `src` (+ optional `poster`). Aspect ratio is locked to exact
+     9:16 everywhere the card/modal render it, regardless of the
+     source clip's native aspect.
   --------------------------------------------------------- */
+  var R = 'assets/reels/';
   var REELS = [
-    { n: '01', catKey: 'EVENTS',       cat: 'Event Coverage',    src: null, poster: null },
-    { n: '02', catKey: 'PROMOTIONAL',  cat: 'Promotional Video', src: 'assets/reels/aldeek/aldeek-01.mp4', poster: 'assets/reels/aldeek/aldeek-01.jpg', client: 'Aldeek Container Cafe' },
-    { n: '03', catKey: 'SOCIAL MEDIA', cat: 'Social Media',      src: 'assets/reels/aldeek/aldeek-02.mp4', poster: 'assets/reels/aldeek/aldeek-02.jpg', client: 'Aldeek Container Cafe' },
-    { n: '04', catKey: 'CINEMATIC',    cat: 'Cinematic',         src: null, poster: null },
-    { n: '05', catKey: 'EVENTS',       cat: 'Event Coverage',    src: null, poster: null },
-    { n: '06', catKey: 'PROMOTIONAL',  cat: 'Promotional Video', src: null, poster: null },
-    { n: '07', catKey: 'SOCIAL MEDIA', cat: 'Social Media',      src: 'assets/reels/aldeek/aldeek-03.mp4', poster: 'assets/reels/aldeek/aldeek-03.jpg', client: 'Aldeek Container Cafe' },
-    { n: '08', catKey: 'EVENTS',       cat: 'Event Coverage',    src: null, poster: null }
-  ].map(function (r) { return Object.assign(r, { title: r.client ? 'ALDEEK CAFE' : 'REEL ' + r.n }); });
+    { title: 'ALDEEK CAFE',        catKey: 'PROMOTIONAL',  cat: 'Promotional Video', slug: 'aldeek/aldeek-01' },
+    { title: 'ALDEEK CAFE',        catKey: 'SOCIAL MEDIA', cat: 'Social Media',      slug: 'aldeek/aldeek-02' },
+    { title: 'ALDEEK CAFE',        catKey: 'SOCIAL MEDIA', cat: 'Social Media',      slug: 'aldeek/aldeek-03' },
+
+    { title: 'ULSAVAM',            catKey: 'EVENTS',       cat: 'Event Coverage',    slug: 'ulsavam' },
+    { title: 'KOURAVA — EDIT',     catKey: 'CINEMATIC',    cat: 'Cinematic',         slug: 'kourava-edit' },
+    { title: 'TKM BROTHERS',       catKey: 'CINEMATIC',    cat: 'Cinematic',         slug: 'tkm-brothers' },
+
+    { title: "AYZAAN — BIRTHDAY",  catKey: 'EVENTS',       cat: 'Event Coverage',    slug: 'ayzaan-birthday' },
+    { title: "FADI — 1ST BIRTHDAY",catKey: 'EVENTS',       cat: 'Event Coverage',    slug: 'fadi-1st-birthday' },
+    { title: "MEHRU — BIRTHDAY",   catKey: 'EVENTS',       cat: 'Event Coverage',    slug: 'mehru-birthday' },
+    { title: "AMEEN — BIRTHDAY",   catKey: 'EVENTS',       cat: 'Event Coverage',    slug: 'ameen-birthday' },
+    { title: "AYASH — BIRTHDAY",   catKey: 'EVENTS',       cat: 'Event Coverage',    slug: 'ayash-birthday' },
+
+    { title: 'BSOFT — SHOWREEL',             catKey: 'PROMOTIONAL', cat: 'Promotional Video', slug: 'bsoft-showreel' },
+    { title: 'BSOFT — BOOTCAMP ANNOUNCEMENT',catKey: 'PROMOTIONAL', cat: 'Promotional Video', slug: 'bsoft-bootcamp-announcement' },
+    { title: 'BSOFT — AI CREATION',          catKey: 'PROMOTIONAL', cat: 'Promotional Video', slug: 'bsoft-ai-creation' },
+    { title: 'BSOFT — INNOVATE YOUR FUTURE', catKey: 'PROMOTIONAL', cat: 'Promotional Video', slug: 'bsoft-innovate-your-future' },
+    { title: 'BSOFT — YOUR FUTURE',          catKey: 'PROMOTIONAL', cat: 'Promotional Video', slug: 'bsoft-your-future' },
+    { title: 'BSOFT — GTA EXPLAINER',        catKey: 'CINEMATIC',   cat: 'Cinematic',         slug: 'bsoft-gta-explainer' },
+    { title: 'BSOFT — RETRO EDIT',           catKey: 'CINEMATIC',   cat: 'Cinematic',         slug: 'bsoft-retro-edit' },
+    { title: 'BSOFT — IT INNOVATOR SUMMIT',  catKey: 'EVENTS',      cat: 'Event Coverage',    slug: 'bsoft-it-innovator-summit' },
+    { title: "BSOFT — VALENTINE'S DAY",      catKey: 'SOCIAL MEDIA',cat: 'Social Media',      slug: 'bsoft-valentines-day' },
+    { title: "BSOFT — WOMEN'S DAY",          catKey: 'SOCIAL MEDIA',cat: 'Social Media',      slug: 'bsoft-womens-day' },
+    { title: 'BSOFT — FEEDBACK 01',          catKey: 'SOCIAL MEDIA',cat: 'Social Media',      slug: 'bsoft-feedback-01' },
+    { title: 'BSOFT — FEEDBACK 02',          catKey: 'SOCIAL MEDIA',cat: 'Social Media',      slug: 'bsoft-feedback-02' },
+
+    { title: 'ACCHU — FYP',   catKey: 'SOCIAL MEDIA', cat: 'Social Media', slug: 'acchu-fyp' },
+    { title: 'AFSAL — FYP',   catKey: 'SOCIAL MEDIA', cat: 'Social Media', slug: 'afsal-fyp' },
+    { title: 'ALIDA — FYP',   catKey: 'SOCIAL MEDIA', cat: 'Social Media', slug: 'alida-fyp' },
+    { title: 'AMITHA — FYP',  catKey: 'SOCIAL MEDIA', cat: 'Social Media', slug: 'amitha-fyp' },
+    { title: 'ARCHA — FYP',   catKey: 'SOCIAL MEDIA', cat: 'Social Media', slug: 'archa-fyp' },
+    { title: 'FADI — FYP',    catKey: 'SOCIAL MEDIA', cat: 'Social Media', slug: 'fadi-fyp' },
+    { title: 'NAZI — FYP',    catKey: 'SOCIAL MEDIA', cat: 'Social Media', slug: 'nazi-fyp' },
+    { title: 'NASIYA — FYP',  catKey: 'SOCIAL MEDIA', cat: 'Social Media', slug: 'nasiya-fyp' }
+  ].map(function (r, i) {
+    r.n = String(i + 1).padStart(2, '0');
+    r.src = R + r.slug + '.mp4';
+    r.poster = R + r.slug + '.jpg';
+    return r;
+  });
 
   var CATS = ['ALL', 'EVENTS', 'PROMOTIONAL', 'SOCIAL MEDIA', 'CINEMATIC'];
 

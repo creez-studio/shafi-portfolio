@@ -19,43 +19,61 @@ Deploy the contents of `site/`.
 ```
 site/
 ├─ index.html          # markup for all 5 pages (Home/About/Skills/Work/Contact)
-├─ css/styles.css      # globals, keyframes, responsive + transition rules
-├─ js/main.js          # routing, transitions, nav, filters, reels, 9:16 modal
+├─ css/styles.css       # globals, keyframes, responsive + transition rules
+├─ js/main.js           # routing, transitions, nav, filters, reels, 9:16 modal
 └─ assets/
-   ├─ portrait-1.png   # Home hero (grayscale cutout)
-   ├─ portrait-2.png   # About portrait (color, framed)
-   └─ reels/           # ← drop reel videos + posters here
+   ├─ portrait-1.png    # Home hero (grayscale cutout)
+   ├─ portrait-2.png    # About portrait (color, framed)
+   └─ reels/            # 31 published reels (web-optimized H.264 mp4 + jpg poster each)
 ```
 
-## Adding the reel videos (9:16)
+## Reels
 
-Reels are defined once, at the top of `js/main.js` in the `REELS` array. Each card
-already renders an **exact 9:16** frame; today it shows a numbered placeholder and the
-modal shows "VIDEO COMING SOON". To publish a real reel, drop the files in
-`assets/reels/` and fill in the matching entry — no other code changes:
+The Work page shows only finished, published reels — no placeholders. Each entry lives
+in the `REELS` array at the top of `js/main.js`:
 
 ```js
-{ n: '01', catKey: 'EVENTS', cat: 'Event Coverage',
-  src: 'assets/reels/reel-01.mp4',      // the 9:16 video
-  poster: 'assets/reels/reel-01.jpg' }, // still frame shown on the card
+{ title: 'ALDEEK CAFE', catKey: 'PROMOTIONAL', cat: 'Promotional Video', slug: 'aldeek/aldeek-01' }
 ```
 
-- `src`  → card shows a muted looping preview; clicking opens the full 9:16 player (with controls, autoplay).
-- `poster` (optional) → still image on the card and as the video poster.
-- Leave both `null` to keep the placeholder.
+`slug` maps to `assets/reels/<slug>.mp4` and `assets/reels/<slug>.jpg` (poster). The
+card shows a muted looping preview; clicking opens the exact-9:16 modal player with
+controls and autoplay. `catKey` must be one of `EVENTS`, `PROMOTIONAL`, `SOCIAL MEDIA`,
+`CINEMATIC` — these drive the filter chips.
 
-Recommended encode: **H.264 MP4, 1080×1920 (9:16)**, ~8–12 Mbps, AAC audio.
-Keep posters as 1080×1920 JPG/WebP for a crisp card.
+**To add a new reel:** encode it (see below), drop the two files in `assets/reels/`,
+and append one object to the `REELS` array. No other code changes needed.
 
-`catKey` must be one of: `EVENTS`, `PROMOTIONAL`, `SOCIAL MEDIA`, `CINEMATIC`
-(these drive the filter chips). Add more reels by appending new objects.
+**Encode spec** used for every reel in this repo — matches well against source phone/export
+footage while staying small enough for web delivery:
+
+```bash
+ffmpeg -i input.mov \
+  -vf "scale='if(gt(iw,ih),-2,min(720,iw))':'if(gt(iw,ih),min(720,ih),-2)'" \
+  -c:v libx264 -preset medium -crf 27 -pix_fmt yuv420p \
+  -c:a aac -b:a 96k -ac 2 -movflags +faststart \
+  output.mp4
+```
+
+Poster (grab a representative frame, ~10% into the clip):
+
+```bash
+ffmpeg -ss 2 -i output.mp4 -frames:v 1 output.jpg
+```
+
+Raw/unedited source footage (multi-hundred-MB phone exports) is intentionally **not**
+committed to this repo — only the compressed, published cut of each reel is.
 
 ## Content
 
 All copy, contact details, roles, education and software proficiencies come from the
 supplied client information and are set directly in `index.html` / `main.js`.
-Social links (Instagram / YouTube / LinkedIn) are `href="#"` placeholders — replace with
-the real URLs when available.
+
+**Social links:** Instagram points to
+[instagram.com/mommad.framez](https://www.instagram.com/mommad.framez?utm_source=qr)
+(opens in a new tab) in the rail sidebar, both Home footer layouts, and the About page.
+YouTube and LinkedIn are still `href="#"` placeholders — send over the real URLs and
+they're a one-line swap in `index.html` (search `aria-label="YouTube"` / `"LinkedIn"`).
 
 ## Notes
 
@@ -63,5 +81,12 @@ the real URLs when available.
 - **Accessibility:** keyboard-operable nav/filters/reels (Enter/Space), focus-visible rings,
   Escape closes the menu and the reel modal, focus is restored on modal close,
   `prefers-reduced-motion` disables animations.
-- **Performance:** hero portrait is preloaded; other media use `loading`/`decoding` hints;
-  reel videos use `preload="none"`.
+- **Performance:** hero portrait is preloaded; reel videos use `preload="none"` with a poster
+  so nothing downloads until a card is opened.
+
+## Known follow-ups
+
+- **Skills page app icons:** the real CapCut / Alight Motion / Premiere Pro / DaVinci
+  Resolve icon files were lost in an earlier editing mistake (see session notes) and
+  need to be re-supplied — the Skills page currently uses text badges (CC/AM/PP/DR) as
+  a placeholder in their place.
