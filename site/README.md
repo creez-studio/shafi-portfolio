@@ -86,7 +86,8 @@ they're a one-line swap in `index.html` (search `aria-label="YouTube"` / `"Linke
 
 ## Known follow-ups
 
-- **Skills page app icons:** the real CapCut / Alight Motion / Premiere Pro / DaVinci
-  Resolve icon files were lost in an earlier editing mistake (see session notes) and
-  need to be re-supplied — the Skills page currently uses text badges (CC/AM/PP/DR) as
-  a placeholder in their place.
+- **Social links:** YouTube and LinkedIn are still `href="#"` placeholders — send the
+  real URLs and they're a one-line swap in `index.html`.
+
+The Skills-page software icons (`assets/icons/` — CapCut, Alight Motion, Premiere Pro,
+DaVinci Resolve) are now the real brand icons, rendered inside the proficiency rings.
