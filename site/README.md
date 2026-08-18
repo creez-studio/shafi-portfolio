@@ -92,23 +92,54 @@ committed to this repo — only the compressed, published cut of each reel is.
 All copy, contact details, roles, education and software proficiencies come from the
 supplied client information and are set directly in `index.html` / `main.js`.
 
-**Social / contact icons** (rail sidebar, both Home footer layouts, About page):
+**Social / contact icons** — Instagram · Email · WhatsApp · LinkedIn, in the rail sidebar,
+both Home footer layouts, and the About page:
 - **Instagram** → [instagram.com/mommad.framez](https://www.instagram.com/mommad.framez?utm_source=qr)
 - **Email** → opens a pre-filled message to shafishams08@gmail.com
 - **WhatsApp** → opens a pre-filled chat to +91 79947 69644
+- **LinkedIn** → href is currently `#linkedin` (placeholder — see follow-ups)
 
-Both the email and WhatsApp icons pre-fill the same plain-text message: *"Hi Muhammad,
+The email and WhatsApp icons pre-fill the same plain-text message: *"Hi Muhammad,
 we are ready to hire you for our project. Let's connect and discuss the details."*
+
+**Contact page** lists Email · Call · WhatsApp · Location — all tappable (Call opens the
+dialer, WhatsApp opens a pre-filled chat).
+
+## About page assets
+
+The About page uses a pencil-sketch portrait floating on the dark background:
+- `assets/portrait-2.png` — the raw sketch you uploaded (source; kept for reference).
+- `assets/about-cutout.png` — derived from it: trimmed to the figure and white background
+  removed (ImageMagick corner flood-fill) so it sits cleanly on dark, no frame.
+- `assets/signature.png` — the red "Shafi." signature with its white background made
+  transparent.
+
+To regenerate the cutout after replacing `portrait-2.png`:
+```bash
+cd site/assets
+convert portrait-2.png -bordercolor white -border 1 -fuzz 12% -trim +repage about-portrait.png
+convert about-portrait.png -alpha set -fuzz 16% -fill none \
+  -draw "matte 0,0 floodfill" -draw "matte %[fx:w-1],0 floodfill" \
+  -draw "matte 0,%[fx:h-1] floodfill" -draw "matte %[fx:w-1],%[fx:h-1] floodfill" \
+  about-cutout.png
+```
 
 ## Known follow-ups
 
-- **⚠️ Name spelling mismatch:** the About page copy reads "Mr. M. M. **Nazeer**, MLA",
-  but the MLA reels' own official on-screen graphics (lower-third + event banners) both
-  read "M.M **NASEER**, MLA." The new reel titles use "Naseer" (matching the primary
-  source). Please confirm the correct spelling so the About paragraph can be fixed to
-  match — one-line change in `index.html`.
-- **YouTube / LinkedIn** were removed from the icon rows per request (replaced with
-  Email + WhatsApp). If either account exists and should be added back, say the word.
+- **⚠️ LinkedIn URL needed:** all four LinkedIn icons point to `#linkedin` as a
+  placeholder. I did **not** guess a real profile URL (a wrong guess could link to a
+  different person). Send the LinkedIn profile link and it's a one-line find-and-replace
+  of `#linkedin` in `index.html`.
+- **⚠️ Education wording:** the design mockup labelled education "B.Sc Computer Science
+  Background," but the real qualification on file is a **Diploma in Computer Science &
+  Engineering (SBTE)** — I kept the accurate one rather than the mockup's placeholder.
+  Confirm if that's correct.
+- **⚠️ Name spelling:** About page paragraphs no longer mention the MLA by name (the new
+  mockup copy is more general), so the Nazeer/Naseer question no longer affects the About
+  page. The MLA reels still use "M. M. Naseer" (matching their on-screen graphics) in the
+  Work section — confirm that spelling.
+- **Cache-busting:** `styles.css` and `main.js` are linked with `?v=2`. Bump this number
+  whenever you change either file so browsers/GitHub Pages fetch the new version.
 
 ## Notes
 

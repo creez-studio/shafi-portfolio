@@ -330,8 +330,8 @@
     });
 
     // about expand
-    $('aboutExtra').hidden = !state.about;
-    $('aboutCta').textContent = state.about ? 'LESS ABOUT ME' : 'MORE ABOUT ME';
+    document.querySelectorAll('.about-extra').forEach(function (el) { el.hidden = !state.about; });
+    document.querySelectorAll('.about-cta-label').forEach(function (el) { el.textContent = state.about ? 'LESS ABOUT ME' : 'MORE ABOUT ME'; });
 
     // contact
     $('contactSent').hidden = !state.sent;

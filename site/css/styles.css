@@ -56,6 +56,8 @@ textarea:focus-visible {
    inline display. !important beats the design's inline display. */
 body:not(.is-narrow) .home-narrow { display: none !important; }
 body.is-narrow .home-wide { display: none !important; }
+body:not(.is-narrow) .about-narrow { display: none !important; }
+body.is-narrow .about-wide { display: none !important; }
 
 /* Utility to show hidden top-nav burger via flex (element uses [hidden] otherwise) */
 #topBurger:not([hidden]) { display: flex; }
