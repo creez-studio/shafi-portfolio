@@ -97,7 +97,7 @@ both Home footer layouts, and the About page:
 - **Instagram** → [instagram.com/mommad.framez](https://www.instagram.com/mommad.framez?utm_source=qr)
 - **Email** → opens a pre-filled message to shafishams08@gmail.com
 - **WhatsApp** → opens a pre-filled chat to +91 79947 69644
-- **LinkedIn** → href is currently `#linkedin` (placeholder — see follow-ups)
+- **LinkedIn** → [linkedin.com/in/muhammed-shafi-698514266](https://www.linkedin.com/in/muhammed-shafi-698514266)
 
 The email and WhatsApp icons pre-fill the same plain-text message: *"Hi Muhammad,
 we are ready to hire you for our project. Let's connect and discuss the details."*
@@ -126,10 +126,6 @@ convert about-portrait.png -alpha set -fuzz 16% -fill none \
 
 ## Known follow-ups
 
-- **⚠️ LinkedIn URL needed:** all four LinkedIn icons point to `#linkedin` as a
-  placeholder. I did **not** guess a real profile URL (a wrong guess could link to a
-  different person). Send the LinkedIn profile link and it's a one-line find-and-replace
-  of `#linkedin` in `index.html`.
 - **⚠️ Education wording:** the design mockup labelled education "B.Sc Computer Science
   Background," but the real qualification on file is a **Diploma in Computer Science &
   Engineering (SBTE)** — I kept the accurate one rather than the mockup's placeholder.
