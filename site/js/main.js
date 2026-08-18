@@ -252,31 +252,54 @@
     bindInteractions($('workFilters'));
   }
 
-  /* ---------- 9:16 reel modal ---------- */
+  /* ---------- reel / process-video modal (9:16 or 16:9) ---------- */
   var lastFocus = null;
-  function openReel(idx) {
-    var r = REELS[idx];
-    if (!r) return;
+  var PROCESS_VIDEO = {
+    title: 'TIMELINE — RAW — RENDER', cat: 'CapCut · One App, Start to Finish', n: '',
+    src: 'assets/reels/process/timeline-raw-render.mp4', poster: 'assets/reels/process/timeline-raw-render.jpg',
+    ratio: '16:9'
+  };
+  function openMedia(item) {
+    if (!item) return;
     lastFocus = document.activeElement;
     var body = $('reelModalBody');
-    if (r.src) {
-      body.innerHTML = '<video src="' + esc(r.src) + '"' + (r.poster ? ' poster="' + esc(r.poster) + '"' : '') +
+    if (item.src) {
+      body.innerHTML = '<video src="' + esc(item.src) + '"' + (item.poster ? ' poster="' + esc(item.poster) + '"' : '') +
         ' controls autoplay playsinline style="width:100%;height:100%;object-fit:contain;background:#000"></video>';
     } else {
       body.innerHTML = '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;' +
         'background:radial-gradient(120% 80% at 50% 0%, rgba(238,27,36,.12), rgba(0,0,0,0) 60%), #0A0A0A">' +
-        '<div style="font-family:\'Big Shoulders Display\',sans-serif;font-weight:800;font-size:clamp(44px,14vw,80px);color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.16)">' + r.n + '</div>' +
+        '<div style="font-family:\'Big Shoulders Display\',sans-serif;font-weight:800;font-size:clamp(44px,14vw,80px);color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.16)">' + esc(item.n || '') + '</div>' +
         '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:.22em;color:rgba(255,255,255,.5)">VIDEO COMING SOON</div>' +
         '<div data-nav="contact" style="cursor:pointer;margin-top:6px;border:1px solid rgba(238,27,36,.7);color:#EE1B24;padding:12px 22px;font-family:\'Barlow Condensed\',sans-serif;font-weight:600;font-size:13px;letter-spacing:.18em">REQUEST FULL REEL</div>' +
         '</div>';
     }
-    $('reelModalTitle').textContent = r.title + '  ·  ' + r.cat;
+    $('reelModalTitle').textContent = item.title + '  ·  ' + item.cat;
+
+    var frame = $('reelModalFrame'), badge = $('reelModalBadge');
+    if (item.ratio === '16:9') {
+      frame.style.aspectRatio = '16/9';
+      frame.style.width = 'min(92vw, 960px)';
+      frame.style.height = 'auto';
+      frame.style.maxWidth = 'min(92vw, 960px)';
+      frame.style.maxHeight = '86vh';
+      badge.textContent = '16:9';
+    } else {
+      frame.style.aspectRatio = '9/16';
+      frame.style.height = 'min(86vh, calc((100vw - 40px) * 16 / 9))';
+      frame.style.width = 'auto';
+      frame.style.maxWidth = 'calc(100vw - 40px)';
+      frame.style.maxHeight = '';
+      badge.textContent = '9:16';
+    }
+
     var m = $('reelModal');
     m.hidden = false;
     document.body.style.overflow = 'hidden';
     var closeBtn = m.querySelector('[data-action="closeReel"]');
     if (closeBtn) { closeBtn.setAttribute('tabindex', '0'); closeBtn.focus(); }
   }
+  function openReel(idx) { openMedia(REELS[idx]); }
   function closeReel() {
     var m = $('reelModal');
     if (m.hidden) return;
@@ -388,6 +411,9 @@
     var reel = target.closest('[data-reel]');
     if (reel) { openReel(parseInt(reel.getAttribute('data-reel'), 10)); return true; }
 
+    var process = target.closest('[data-process]');
+    if (process) { openMedia(PROCESS_VIDEO); return true; }
+
     return false;
   }
 
@@ -405,7 +431,7 @@
     if (e.key === 'Enter' || e.key === ' ') {
       var el = e.target;
       if (el && (el.hasAttribute('data-nav') || el.hasAttribute('data-action') ||
-                 el.hasAttribute('data-filter') || el.hasAttribute('data-reel'))) {
+                 el.hasAttribute('data-filter') || el.hasAttribute('data-reel') || el.hasAttribute('data-process'))) {
         e.preventDefault();
         onActivate(el);
       }

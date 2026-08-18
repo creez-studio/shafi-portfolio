@@ -108,21 +108,42 @@ dialer, WhatsApp opens a pre-filled chat).
 ## About page assets
 
 The About page uses a pencil-sketch portrait floating on the dark background:
-- `assets/portrait-2.png` — the raw sketch you uploaded (source; kept for reference).
-- `assets/about-cutout.png` — derived from it: trimmed to the figure and white background
-  removed (ImageMagick corner flood-fill) so it sits cleanly on dark, no frame.
-- `assets/signature.png` — the red "Shafi." signature with its white background made
-  transparent.
+- `assets/portrait-2.png` — the raw sketch (source; kept for reference).
+- `assets/about-cutout.png` — the same portrait with its background removed so it sits
+  cleanly on dark, no frame. Currently a hand-cleaned cutout — if you replace it, just
+  drop the new file in at the same path; no code changes needed as long as the aspect
+  ratio stays roughly portrait.
+- `assets/signature.png` — the red "Shafi." signature, transparent background.
 
-To regenerate the cutout after replacing `portrait-2.png`:
-```bash
-cd site/assets
-convert portrait-2.png -bordercolor white -border 1 -fuzz 12% -trim +repage about-portrait.png
-convert about-portrait.png -alpha set -fuzz 16% -fill none \
-  -draw "matte 0,0 floodfill" -draw "matte %[fx:w-1],0 floodfill" \
-  -draw "matte 0,%[fx:h-1] floodfill" -draw "matte %[fx:w-1],%[fx:h-1] floodfill" \
-  about-cutout.png
-```
+The signature appears in three places: inside the About page's quote card (both desktop
+and mobile), inside the rail sidebar's "Every frame has a purpose" quote (shown on the
+Work and Contact pages), and nowhere else — it's deliberately paired with quotes/copy
+rather than floating loose over the portrait, so it always has a legible backdrop.
+
+## Behind the Scenes (16:9 process video)
+
+The Work page has a dedicated section below the reel grid — **"TIMELINE → RAW → RENDER"**
+— for content that isn't a 9:16 reel: a 16:9 process/comparison video showing the edit
+timeline, raw footage and final render side by side inside CapCut. It uses the same
+card → modal pattern as the reels, but the modal now supports either aspect ratio.
+
+- Video: `assets/reels/process/timeline-raw-render.mp4` (+ `.jpg` poster)
+- Defined once as `PROCESS_VIDEO` near the top of `js/main.js`, with `ratio: '16:9'`
+- The modal (`openMedia()` in `main.js`) reads `ratio` and resizes the frame — `9:16`
+  reels get the tall frame, `16:9` items get a wide `min(92vw, 960px)` frame
+
+**To add another 16:9 (or any non-reel) video** the same way: transcode it, drop it in
+`assets/reels/`, and either add a new card block copying the "BEHIND THE SCENES" markup
+in `index.html`, or extend the pattern with more entries.
+
+## Link previews (Open Graph / Twitter Card)
+
+`assets/thumbnail.png` (1668×943) is now wired into `og:image` / `twitter:image` with
+absolute URLs, `og:url`, `og:site_name`, image dimensions, and `twitter:card:
+summary_large_image` — so sharing the site link on WhatsApp, iMessage, Slack, X, etc.
+shows the real thumbnail instead of a bare link or a random image. If you swap the
+image, keep the same filename or update the two `og:image`/`twitter:image` URLs in
+`index.html`'s `<head>`.
 
 ## Known follow-ups
 
@@ -130,11 +151,9 @@ convert about-portrait.png -alpha set -fuzz 16% -fill none \
   Background," but the real qualification on file is a **Diploma in Computer Science &
   Engineering (SBTE)** — I kept the accurate one rather than the mockup's placeholder.
   Confirm if that's correct.
-- **⚠️ Name spelling:** About page paragraphs no longer mention the MLA by name (the new
-  mockup copy is more general), so the Nazeer/Naseer question no longer affects the About
-  page. The MLA reels still use "M. M. Naseer" (matching their on-screen graphics) in the
-  Work section — confirm that spelling.
-- **Cache-busting:** `styles.css` and `main.js` are linked with `?v=2`. Bump this number
+- **⚠️ Name spelling:** the MLA reels use "M. M. Naseer" (matching their on-screen
+  graphics) — confirm that spelling is correct.
+- **Cache-busting:** `styles.css` and `main.js` are linked with `?v=3`. Bump this number
   whenever you change either file so browsers/GitHub Pages fetch the new version.
 
 ## Notes
