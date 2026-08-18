@@ -15,6 +15,15 @@
   --------------------------------------------------------- */
   var R = 'assets/reels/';
   var REELS = [
+    // Current work — PR team of M. M. Naseer, MLA (Chadayamangalam)
+    { title: 'SCHOOL PARK — INAUGURATION',        catKey: 'MLA WORKS', cat: 'M. M. Naseer, MLA — Chadayamangalam', slug: 'mla/mla-school-park-inauguration' },
+    { title: 'KADAKKAL TALUK HOSPITAL REVIEW',    catKey: 'MLA WORKS', cat: 'M. M. Naseer, MLA — Chadayamangalam', slug: 'mla/mla-taluk-hospital-review' },
+    { title: 'VATTATHIL THANGAL WATERFALLS',      catKey: 'MLA WORKS', cat: 'M. M. Naseer, MLA — Chadayamangalam', slug: 'mla/mla-tourism-waterfalls' },
+    { title: 'CHITHARA — KANNANKODE SETTLEMENT',  catKey: 'MLA WORKS', cat: 'M. M. Naseer, MLA — Chadayamangalam', slug: 'mla/mla-chithara-settlement' },
+    { title: 'JANASAMPARKAM',                     catKey: 'MLA WORKS', cat: 'M. M. Naseer, MLA — Chadayamangalam', slug: 'mla/mla-janasamparkam' },
+    { title: 'WORLD ANTI-DRUG DAY PROGRAM',       catKey: 'MLA WORKS', cat: 'M. M. Naseer, MLA — Chadayamangalam', slug: 'mla/mla-anti-drug-day' },
+    { title: 'VELINALLOOR — AMBALAMKUNNU',        catKey: 'MLA WORKS', cat: 'M. M. Naseer, MLA — Chadayamangalam', slug: 'mla/mla-velinalloor-settlement' },
+
     { title: 'ALDEEK CAFE',        catKey: 'PROMOTIONAL',  cat: 'Promotional Video', slug: 'aldeek/aldeek-01' },
     { title: 'ALDEEK CAFE',        catKey: 'SOCIAL MEDIA', cat: 'Social Media',      slug: 'aldeek/aldeek-02' },
     { title: 'ALDEEK CAFE',        catKey: 'SOCIAL MEDIA', cat: 'Social Media',      slug: 'aldeek/aldeek-03' },
@@ -57,7 +66,7 @@
     return r;
   });
 
-  var CATS = ['ALL', 'EVENTS', 'PROMOTIONAL', 'SOCIAL MEDIA', 'CINEMATIC'];
+  var CATS = ['ALL', 'MLA WORKS', 'EVENTS', 'PROMOTIONAL', 'SOCIAL MEDIA', 'CINEMATIC'];
 
   var SKILLS = [
     'Cinematic Editing', 'Social Media Content Creation', 'Video Shooting', 'Framing',
@@ -227,6 +236,7 @@
           '<div style="width:22px;height:2px;background:#EE1B24;margin-top:10px"></div>' +
         '</div>' +
         '<div style="position:absolute;top:12px;left:12px;font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:.14em;color:rgba(255,255,255,.72);background:rgba(0,0,0,.6);padding:4px 8px;pointer-events:none">9:16</div>' +
+        (r.catKey === 'MLA WORKS' ? '<div style="position:absolute;top:12px;right:12px;font-family:\'Barlow Condensed\',sans-serif;font-weight:600;font-size:10px;letter-spacing:.14em;color:#fff;background:#EE1B24;padding:4px 9px;pointer-events:none">CURRENT PROJECT</div>' : '') +
       '</div>';
     }).join('');
     bindInteractions(grid);
@@ -402,13 +412,46 @@
     }
   });
 
-  // contact form
+  // contact form — delivers to shafishams08@gmail.com via FormSubmit (no backend needed)
+  var CONTACT_ENDPOINT = 'https://formsubmit.co/ajax/shafishams08@gmail.com';
   $('contactForm').addEventListener('submit', function (e) {
     e.preventDefault();
-    if (!e.target.checkValidity()) { e.target.reportValidity(); return; }
-    state.sent = true;
-    render();
-    try { e.target.reset(); } catch (err) {}
+    var form = e.target;
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+
+    var btn = $('contactSubmit');
+    var label = $('contactSubmitLabel');
+    var errorBox = $('contactError');
+    errorBox.hidden = true;
+    btn.disabled = true;
+    label.textContent = 'SENDING…';
+
+    var data = {
+      name: form.name.value.trim(),
+      email: form.email.value.trim(),
+      subject: form.subject.value.trim() || 'New message from the portfolio site',
+      message: form.message.value.trim(),
+      _subject: 'Portfolio contact: ' + (form.subject.value.trim() || form.name.value.trim())
+    };
+
+    fetch(CONTACT_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(data)
+    })
+      .then(function (res) { if (!res.ok) throw new Error('Request failed'); return res.json(); })
+      .then(function () {
+        state.sent = true;
+        render();
+        try { form.reset(); } catch (err) {}
+      })
+      .catch(function () {
+        errorBox.hidden = false;
+      })
+      .finally(function () {
+        btn.disabled = false;
+        label.textContent = 'SEND MESSAGE';
+      });
   });
 
   // resize (debounced)

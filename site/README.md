@@ -12,7 +12,8 @@ python3 -m http.server 8777
 ```
 
 Any static host works (Netlify, Vercel, GitHub Pages, Cloudflare Pages, S3, nginx…).
-Deploy the contents of `site/`.
+Deploy the contents of `site/`. Currently live at GitHub Pages via
+`.github/workflows/deploy-pages.yml` — publishes automatically on every push to `main`.
 
 ## Structure
 
@@ -20,12 +21,30 @@ Deploy the contents of `site/`.
 site/
 ├─ index.html          # markup for all 5 pages (Home/About/Skills/Work/Contact)
 ├─ css/styles.css       # globals, keyframes, responsive + transition rules
-├─ js/main.js           # routing, transitions, nav, filters, reels, 9:16 modal
+├─ js/main.js           # routing, transitions, nav, filters, reels, 9:16 modal, contact form
 └─ assets/
    ├─ portrait-1.png    # Home hero (grayscale cutout)
    ├─ portrait-2.png    # About portrait (color, framed)
-   └─ reels/            # 31 published reels (web-optimized H.264 mp4 + jpg poster each)
+   ├─ icons/            # real software icons for the Skills page
+   └─ reels/            # 38 published reels (web-optimized H.264 mp4 + jpg poster each)
+      ├─ mla/            # M. M. Naseer, MLA (Chadayamangalam) — current constituency work
+      └─ aldeek/          # Aldeek Container Cafe
 ```
+
+## Contact form
+
+The "SEND ME A MESSAGE" form on the Contact page delivers to **shafishams08@gmail.com**
+via [FormSubmit](https://formsubmit.co) — a free form-relay service, no backend or API
+key required. Wired in `js/main.js` (`CONTACT_ENDPOINT`).
+
+**One-time activation:** the *first* message ever sent through the form triggers a
+confirmation email from FormSubmit to shafishams08@gmail.com. That email must be opened
+and its activation link clicked once — after that, every future submission is delivered
+straight to the inbox automatically, with no further action needed. (A wiring test was
+run during setup, so check that inbox for the activation email.)
+
+If FormSubmit is ever unreachable, the form shows an inline error with a `mailto:` link
+as a fallback — nothing is silently lost.
 
 ## Reels
 
@@ -38,8 +57,12 @@ in the `REELS` array at the top of `js/main.js`:
 
 `slug` maps to `assets/reels/<slug>.mp4` and `assets/reels/<slug>.jpg` (poster). The
 card shows a muted looping preview; clicking opens the exact-9:16 modal player with
-controls and autoplay. `catKey` must be one of `EVENTS`, `PROMOTIONAL`, `SOCIAL MEDIA`,
-`CINEMATIC` — these drive the filter chips.
+controls and autoplay. `catKey` must be one of `MLA WORKS`, `EVENTS`, `PROMOTIONAL`,
+`SOCIAL MEDIA`, `CINEMATIC` — these drive the filter chips.
+
+**MLA WORKS** is the current, most important project — the 7 reels from the PR team of
+M. M. Naseer, MLA (Chadayamangalam). They're pinned first in the `REELS` array (so they
+lead the "ALL" view) and carry a red "CURRENT PROJECT" badge on their card.
 
 **To add a new reel:** encode it (see below), drop the two files in `assets/reels/`,
 and append one object to the `REELS` array. No other code changes needed.
@@ -69,11 +92,23 @@ committed to this repo — only the compressed, published cut of each reel is.
 All copy, contact details, roles, education and software proficiencies come from the
 supplied client information and are set directly in `index.html` / `main.js`.
 
-**Social links:** Instagram points to
-[instagram.com/mommad.framez](https://www.instagram.com/mommad.framez?utm_source=qr)
-(opens in a new tab) in the rail sidebar, both Home footer layouts, and the About page.
-YouTube and LinkedIn are still `href="#"` placeholders — send over the real URLs and
-they're a one-line swap in `index.html` (search `aria-label="YouTube"` / `"LinkedIn"`).
+**Social / contact icons** (rail sidebar, both Home footer layouts, About page):
+- **Instagram** → [instagram.com/mommad.framez](https://www.instagram.com/mommad.framez?utm_source=qr)
+- **Email** → opens a pre-filled message to shafishams08@gmail.com
+- **WhatsApp** → opens a pre-filled chat to +91 79947 69644
+
+Both the email and WhatsApp icons pre-fill the same plain-text message: *"Hi Muhammad,
+we are ready to hire you for our project. Let's connect and discuss the details."*
+
+## Known follow-ups
+
+- **⚠️ Name spelling mismatch:** the About page copy reads "Mr. M. M. **Nazeer**, MLA",
+  but the MLA reels' own official on-screen graphics (lower-third + event banners) both
+  read "M.M **NASEER**, MLA." The new reel titles use "Naseer" (matching the primary
+  source). Please confirm the correct spelling so the About paragraph can be fixed to
+  match — one-line change in `index.html`.
+- **YouTube / LinkedIn** were removed from the icon rows per request (replaced with
+  Email + WhatsApp). If either account exists and should be added back, say the word.
 
 ## Notes
 
@@ -83,11 +118,3 @@ they're a one-line swap in `index.html` (search `aria-label="YouTube"` / `"Linke
   `prefers-reduced-motion` disables animations.
 - **Performance:** hero portrait is preloaded; reel videos use `preload="none"` with a poster
   so nothing downloads until a card is opened.
-
-## Known follow-ups
-
-- **Social links:** YouTube and LinkedIn are still `href="#"` placeholders — send the
-  real URLs and they're a one-line swap in `index.html`.
-
-The Skills-page software icons (`assets/icons/` — CapCut, Alight Motion, Premiere Pro,
-DaVinci Resolve) are now the real brand icons, rendered inside the proficiency rings.
