@@ -46,23 +46,40 @@ run during setup, so check that inbox for the activation email.)
 If FormSubmit is ever unreachable, the form shows an inline error with a `mailto:` link
 as a fallback — nothing is silently lost.
 
-## Reels
+## Reels — fanned/overlapping stack by category
 
-The Work page shows only finished, published reels — no placeholders. Each entry lives
-in the `REELS` array at the top of `js/main.js`:
+The Work page groups reels into labelled category sections, each rendered as a
+**fanned overlapping card deck**: the center card is enlarged with a red border,
+side cards peek out at decreasing scale/opacity, and prev/next arrows (or a mobile
+touch swipe) rotate the deck. Tap a peeking card to bring it to center; tap the
+center card (or the red **PLAY** button) to open the 9:16 (or 16:9) modal player.
+
+Filter chips at the top act as anchors — clicking a category smooth-scrolls to
+that section (and `ALL` filter shows every section, in order).
+
+Each `REELS` entry:
 
 ```js
 { title: 'ALDEEK CAFE', catKey: 'PROMOTIONAL', cat: 'Promotional Video', slug: 'aldeek/aldeek-01' }
+// or for a landscape clip:
+{ title: 'JUNGLE MOVIE REF', catKey: 'REMAKES', cat: 'Cinematic Remake', slug: 'remakes/jungle-movie-ref', ratio: '16:9' }
 ```
 
-`slug` maps to `assets/reels/<slug>.mp4` and `assets/reels/<slug>.jpg` (poster). The
-card shows a muted looping preview; clicking opens the exact-9:16 modal player with
-controls and autoplay. `catKey` must be one of `MLA WORKS`, `EVENTS`, `PROMOTIONAL`,
-`SOCIAL MEDIA`, `CINEMATIC` — these drive the filter chips.
+`slug` maps to `assets/reels/<slug>.mp4` and `assets/reels/<slug>.jpg` (poster).
+Add `ratio: '16:9'` for landscape clips — the card frame stays uniform 9:16 (the
+video letterboxes inside), and the modal opens in the correct wide aspect. Default
+ratio is 9:16.
+
+`catKey` must be one of the categories in the `CATEGORIES` array at the top of
+`js/main.js`. To add a new category, append `{ key, label, tag }` to that array and
+tag your reels with the same `catKey`.
 
 **MLA WORKS** is the current, most important project — the 7 reels from the PR team of
-M. M. Naseer, MLA (Chadayamangalam). They're pinned first in the `REELS` array (so they
-lead the "ALL" view) and carry a red "CURRENT PROJECT" badge on their card.
+M. M. Naseer, MLA (Chadayamangalam). It's ordered first in `CATEGORIES` so it leads the
+"ALL" view.
+
+**REMAKES** is the film-reference / cinematic remakes category — 4 reels (mix of
+vertical and landscape).
 
 **To add a new reel:** encode it (see below), drop the two files in `assets/reels/`,
 and append one object to the `REELS` array. No other code changes needed.

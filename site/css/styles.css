@@ -10,8 +10,16 @@ body {
   text-rendering: optimizeLegibility;
   font-family: Barlow, system-ui, sans-serif;
   color: #F2F2F2;
+  overscroll-behavior-y: none;   /* stop pull-to-refresh flash on iOS */
 }
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+/* Our own tap feedback — instant, dark ripple over interactive elements */
+a:active, button:active, [data-nav]:active, [data-action]:active,
+[data-filter]:active, [data-reel]:active, [data-process]:active,
+[data-stack-prev]:active, [data-stack-next]:active {
+  opacity: .85;
+}
 
 /* [hidden] must beat inline display:flex used throughout the design markup */
 [hidden] { display: none !important; }
@@ -71,3 +79,245 @@ body.is-narrow .about-wide { display: none !important; }
   }
   #stage.is-exiting { opacity: 1; transform: none; }
 }
+
+/* ============================================================
+   Work page — filter chips + stacked/fanned category decks
+   ============================================================ */
+
+.filter {
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, .12);
+  color: rgba(255, 255, 255, .62);
+  background: transparent;
+  padding: 10px 18px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: .16em;
+  border-radius: 999px;
+  transition: color .18s, border-color .18s, background .18s;
+}
+.filter.is-active {
+  color: #EE1B24;
+  border-color: #EE1B24;
+  background: rgba(238, 27, 36, .1);
+}
+
+#workStacks { display: flex; flex-direction: column; gap: clamp(48px, 6vh, 88px); }
+
+.stack {
+  scroll-margin-top: 20px;
+  padding: 4px 0;
+}
+.stack-head { margin-bottom: clamp(20px, 3vh, 32px); }
+.stack-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: .24em;
+  color: #EE1B24;
+  margin-bottom: 8px;
+}
+.stack-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.stack-title {
+  margin: 0;
+  font-family: 'Big Shoulders Display', sans-serif;
+  font-weight: 800;
+  font-size: clamp(36px, 5vw, 68px);
+  line-height: .95;
+  letter-spacing: -.005em;
+  color: #F6F6F6;
+}
+.stack-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: rgba(255, 255, 255, .38);
+}
+
+/* Deck: fanned overlapping cards */
+.deck {
+  --card-w: clamp(180px, 20vw, 240px);
+  --card-h: calc(var(--card-w) * 16 / 9);
+  --card-offset-x: calc(var(--card-w) * 0.42);
+  position: relative;
+  height: calc(var(--card-h) + 60px);
+  margin: 0 auto;
+  max-width: 100%;
+  overflow: hidden;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.deck-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--card-w);
+  height: var(--card-h);
+  transform:
+    translate(-50%, -50%)
+    translateX(calc(var(--offset, 0) * var(--card-offset-x)))
+    scale(var(--scale, 1));
+  opacity: var(--opacity, 1);
+  z-index: calc(var(--z, 10));
+  filter: brightness(var(--dim, 1));
+  transition:
+    transform .5s cubic-bezier(.16, 1, .3, 1),
+    opacity .35s ease,
+    filter .35s ease;
+  cursor: pointer;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #0A0A0A;
+  border: 1px solid rgba(255, 255, 255, .08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .5);
+  display: flex;
+  flex-direction: column;
+}
+.deck-card.is-active {
+  border: 2px solid #EE1B24;
+  box-shadow: 0 16px 60px rgba(238, 27, 36, .28), 0 4px 18px rgba(0, 0, 0, .6);
+}
+
+.deck-card-media {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background: #0A0A0A;
+}
+.deck-card-ratio {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  color: rgba(255, 255, 255, .72);
+  background: rgba(0, 0, 0, .6);
+  padding: 3px 7px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 2;
+}
+.deck-card-foot {
+  padding: 12px 14px 14px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, .0), rgba(0, 0, 0, .55));
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  pointer-events: none;
+}
+.deck-card-n {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #EE1B24;
+  flex: 0 0 auto;
+}
+.deck-card-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: .12em;
+  color: #F0F0F0;
+  line-height: 1.25;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Info bar under the deck */
+.deck-info {
+  margin-top: clamp(14px, 2vh, 22px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, .07);
+}
+.deck-info-main { min-width: 0; flex: 1 1 200px; }
+.deck-active-cat {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .2em;
+  color: rgba(255, 255, 255, .42);
+  text-transform: uppercase;
+}
+.deck-active-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: clamp(18px, 2vw, 26px);
+  letter-spacing: .06em;
+  color: #F0F0F0;
+  margin-top: 4px;
+  line-height: 1.2;
+}
+.deck-nav { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.deck-arrow {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .18);
+  background: transparent;
+  color: rgba(255, 255, 255, .8);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color .18s, color .18s, background .18s;
+}
+.deck-arrow:hover { border-color: #EE1B24; color: #EE1B24; background: rgba(238, 27, 36, .06); }
+.deck-counter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  letter-spacing: .16em;
+  color: rgba(255, 255, 255, .72);
+  min-width: 52px;
+  text-align: center;
+}
+.deck-play {
+  cursor: pointer;
+  border: 1px solid #EE1B24;
+  background: transparent;
+  color: #EE1B24;
+  padding: 11px 22px;
+  border-radius: 999px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: .2em;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background .18s, color .18s;
+}
+
+.stack-empty {
+  padding: 40px;
+  border: 1px dashed rgba(255, 255, 255, .14);
+  border-radius: 16px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: .16em;
+  color: rgba(255, 255, 255, .42);
+}
+
+/* Mobile tuning */
+body.is-narrow .deck {
+  --card-w: min(200px, 52vw);
+  --card-offset-x: calc(var(--card-w) * 0.38);
+}
+body.is-narrow .stack-title { font-size: clamp(30px, 8vw, 44px); }
+body.is-narrow .deck-info { flex-direction: column; align-items: flex-start; gap: 10px; }
+body.is-narrow .deck-nav { width: 100%; justify-content: space-between; }
+
+/* Contact row CTA — subtle red arrow that slides on hover */
+.contact-row { transition: transform .18s ease; }
+.contact-row:hover { transform: translateX(4px); }
+.contact-cta { transition: color .18s ease; }
+.contact-row:hover .contact-cta { color: #ff5b61; }
