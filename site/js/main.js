@@ -94,8 +94,11 @@
   var state = {
     page: null, filter: 'ALL', menu: false, about: false, sent: false,
     w: window.innerWidth,
-    stackActive: {},         // { catKey: activeIndex }
-    modalOpen: false
+    stackActive: {},         // { catKey: nearestInt } — used for is-active + info panel
+    stackFloat:  {},         // { catKey: floatPosition } — used for smooth transforms
+    modalOpen: false,
+    modalPeers: null,        // reels in same category as the currently open modal
+    modalPeerIdx: 0
   };
 
   var $ = function (id) { return document.getElementById(id); };
@@ -333,52 +336,118 @@
     attachDeckSwipe();
   }
 
-  // Touch-swipe on decks: horizontal drag advances prev/next.
+  // ---------- Wheel + touch swipe with free-scroll (fractional positions) ----------
+
   function attachDeckSwipe() {
     document.querySelectorAll('.deck').forEach(function (deck) {
       if (deck.__swipeBound) return;
       deck.__swipeBound = true;
-      var startX = 0, startY = 0, dx = 0, active = false;
+      var cat = deck.getAttribute('data-deck');
+
+      // Touch: continuous drag with pixel-to-cards conversion
+      var startX = 0, startY = 0, startFloat = 0, dragging = false, isSwipe = false;
       deck.addEventListener('touchstart', function (e) {
         if (e.touches.length !== 1) return;
         startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-        dx = 0; active = true;
+        startFloat = (cat in state.stackFloat) ? state.stackFloat[cat] : (state.stackActive[cat] || 0);
+        dragging = true; isSwipe = false;
+        clearTimeout(deck.__snapT);
+        deck.classList.add('is-dragging');
       }, { passive: true });
       deck.addEventListener('touchmove', function (e) {
-        if (!active) return;
-        dx = e.touches[0].clientX - startX;
+        if (!dragging) return;
+        var dx = e.touches[0].clientX - startX;
         var dy = e.touches[0].clientY - startY;
-        if (Math.abs(dy) > Math.abs(dx)) active = false; // vertical scroll wins
+        if (!isSwipe) {
+          if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) isSwipe = true;
+          else if (Math.abs(dy) > 8) { dragging = false; deck.classList.remove('is-dragging'); return; }
+        }
+        if (!isSwipe) return;
+        // 1 card advance = ~65% of one card offset unit (card-w * 0.42)
+        var w = deck.offsetWidth;
+        var cardOffsetPx = Math.max(80, w * 0.14);
+        var deltaFloat = -dx / cardOffsetPx;
+        setStackFloat(cat, startFloat + deltaFloat, false);
       }, { passive: true });
       deck.addEventListener('touchend', function () {
-        if (!active) return;
-        active = false;
-        if (Math.abs(dx) < 40) return;
-        var cat = deck.getAttribute('data-deck');
-        stackShift(cat, dx < 0 ? 1 : -1);
+        if (!dragging) return;
+        dragging = false;
+        deck.classList.remove('is-dragging');
+        if (isSwipe) snapStack(cat);
       }, { passive: true });
+
+      // Wheel: rotate deck. Release to page scroll at either edge.
+      deck.addEventListener('wheel', function (e) {
+        var reels = REELS.filter(function (r) { return r.catKey === cat; });
+        if (reels.length <= 1) return;
+        var maxIdx = reels.length - 1;
+        var cur = (cat in state.stackFloat) ? state.stackFloat[cat] : (state.stackActive[cat] || 0);
+        // Prefer horizontal wheel delta if present (Magic Mouse / trackpad),
+        // otherwise use vertical.
+        var dominant = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        var goingForward = dominant > 0;
+        var atStart = cur <= 0.02;
+        var atEnd = cur >= maxIdx - 0.02;
+        if ((goingForward && atEnd) || (!goingForward && atStart)) return; // release
+        e.preventDefault();
+        deck.classList.add('is-dragging');
+        var next = cur + dominant * 0.006;
+        setStackFloat(cat, next, false);
+        clearTimeout(deck.__snapT);
+        deck.__snapT = setTimeout(function () {
+          deck.classList.remove('is-dragging');
+          snapStack(cat);
+        }, 160);
+      }, { passive: false });
     });
   }
 
+  function snapStack(cat) {
+    var reels = REELS.filter(function (r) { return r.catKey === cat; });
+    if (!reels.length) return;
+    var cur = (cat in state.stackFloat) ? state.stackFloat[cat] : (state.stackActive[cat] || 0);
+    var snapped = Math.round(cur);
+    if (snapped < 0) snapped = 0;
+    if (snapped > reels.length - 1) snapped = reels.length - 1;
+    setStackFloat(cat, snapped, true);
+  }
+
+  // stackShift: whole-step nav (used by arrow buttons + keyboard). Snaps immediately.
   function stackShift(cat, delta) {
     var reels = REELS.filter(function (r) { return r.catKey === cat; });
     if (!reels.length) return;
-    var active = (state.stackActive[cat] || 0) + delta;
-    if (active < 0) active = reels.length - 1;
-    if (active >= reels.length) active = 0;
-    state.stackActive[cat] = active;
-    updateDeck(cat);
+    var cur = state.stackActive[cat] || 0;
+    var next = cur + delta;
+    if (next < 0) next = reels.length - 1;
+    if (next >= reels.length) next = 0;
+    setStackFloat(cat, next, true);
   }
 
-  // Fast in-place update of a deck without re-parsing HTML.
-  function updateDeck(cat) {
+  // Core setter — clamps, updates state, re-applies CSS vars.
+  function setStackFloat(cat, val, snap) {
+    var reels = REELS.filter(function (r) { return r.catKey === cat; });
+    if (!reels.length) return;
+    var maxIdx = reels.length - 1;
+    if (val < 0) val = 0;
+    if (val > maxIdx) val = maxIdx;
+    state.stackFloat[cat] = val;
+    var nearestInt = Math.round(val);
+    var activeChanged = state.stackActive[cat] !== nearestInt;
+    state.stackActive[cat] = nearestInt;
+    updateDeckVisual(cat, snap);
+    if (activeChanged || snap) updateDeckInfo(cat);
+  }
+
+  function updateDeckVisual(cat, snap) {
     var section = document.getElementById('stack-' + catSlug(cat));
     if (!section) return;
-    var reels = REELS.filter(function (r) { return r.catKey === cat; });
-    var active = state.stackActive[cat] || 0;
+    var floatVal = state.stackFloat[cat] || 0;
+    var nearestInt = state.stackActive[cat] || 0;
+    if (snap) section.classList.remove('is-drag-anim');
+    else section.classList.add('is-drag-anim');
     var cards = section.querySelectorAll('.deck-card');
     cards.forEach(function (el, i) {
-      var offset = i - active;
+      var offset = i - floatVal;
       var abs = Math.abs(offset);
       var v = cardVars(offset);
       el.style.setProperty('--offset', v.offset);
@@ -386,9 +455,10 @@
       el.style.setProperty('--opacity', v.opacity);
       el.style.setProperty('--z', v.z);
       el.style.setProperty('--dim', v.dim);
-      el.classList.toggle('is-active', offset === 0);
-      el.setAttribute('tabindex', offset === 0 ? '0' : '-1');
-      var visible = abs <= 3;
+      var isActive = (i === nearestInt);
+      el.classList.toggle('is-active', isActive);
+      el.setAttribute('tabindex', isActive ? '0' : '-1');
+      var visible = abs <= 3.5;
       if (visible) {
         el.style.visibility = '';
         el.style.pointerEvents = '';
@@ -396,10 +466,16 @@
         el.style.visibility = 'hidden';
         el.style.pointerEvents = 'none';
       }
-      // sync the play overlay opacity
       var play = el.querySelector('.reel-play');
-      if (play) play.style.opacity = offset === 0 ? '.92' : '0';
+      if (play) play.style.opacity = isActive ? '.92' : '0';
     });
+  }
+
+  function updateDeckInfo(cat) {
+    var section = document.getElementById('stack-' + catSlug(cat));
+    if (!section) return;
+    var reels = REELS.filter(function (r) { return r.catKey === cat; });
+    var active = state.stackActive[cat] || 0;
     var r = reels[active];
     var infoT = section.querySelector('.deck-active-title');
     var infoC = section.querySelector('.deck-active-cat');
@@ -408,6 +484,9 @@
     if (infoC) infoC.textContent = r.cat;
     if (counter) counter.textContent = pad2(active + 1) + ' / ' + pad2(reels.length);
   }
+
+  // Kept for compatibility with any leftover callers.
+  function updateDeck(cat) { setStackFloat(cat, state.stackActive[cat] || 0, true); }
 
   function buildFilters() {
     $('workFilters').innerHTML = CATS.map(function (label) {
@@ -430,9 +509,15 @@
     ratio: '16:9'
   };
 
-  function openMedia(item) {
+  function openMedia(item, peers, peerIdx) {
     if (!item) return;
-    lastFocus = document.activeElement;
+    var alreadyOpen = state.modalOpen;
+    if (!alreadyOpen) lastFocus = document.activeElement;
+
+    // Track the peer list for prev/next in the modal
+    state.modalPeers = peers && peers.length ? peers : [item];
+    state.modalPeerIdx = typeof peerIdx === 'number' ? peerIdx : 0;
+
     var body = $('reelModalBody');
     if (item.src) {
       body.innerHTML = '<video src="' + esc(item.src) + '"' + (item.poster ? ' poster="' + esc(item.poster) + '"' : '') +
@@ -462,13 +547,34 @@
       badge.textContent = '9:16';
     }
 
+    // Prev/Next visibility — only show when the peer list has multiple items
+    var hasPeers = state.modalPeers.length > 1;
+    var prevBtn = $('reelModalPrev'), nextBtn = $('reelModalNext');
+    if (prevBtn) prevBtn.hidden = !hasPeers;
+    if (nextBtn) nextBtn.hidden = !hasPeers;
+
+    // Reflect the modal's current pick in the underlying deck (so closing the modal
+    // leaves the deck showing the last-viewed reel).
+    if (item.catKey && REELS.indexOf(item) !== -1) {
+      var reels = REELS.filter(function (r) { return r.catKey === item.catKey; });
+      var pi = reels.indexOf(item);
+      if (pi !== -1) {
+        state.stackActive[item.catKey] = pi;
+        state.stackFloat[item.catKey] = pi;
+        updateDeckVisual(item.catKey, true);
+        updateDeckInfo(item.catKey);
+      }
+    }
+
+    if (alreadyOpen) return; // swap-in-place: no need to re-show or push history
+
     var m = $('reelModal');
     m.hidden = false;
     state.modalOpen = true;
     document.body.style.overflow = 'hidden';
 
     // Push a history entry so the browser/OS back gesture closes the modal
-    // instead of navigating away. We tag it so popstate can recognize it.
+    // instead of navigating away.
     try {
       history.pushState({ modal: true, page: state.page || 'home' }, '', location.hash || '#work');
     } catch (e) {}
@@ -476,7 +582,24 @@
     var closeBtn = m.querySelector('[data-action="closeReel"]');
     if (closeBtn) { closeBtn.setAttribute('tabindex', '0'); closeBtn.focus(); }
   }
-  function openReel(idx) { openMedia(REELS[idx]); }
+  function openReel(idx) {
+    var r = REELS[idx];
+    if (!r) return;
+    var peers = REELS.filter(function (rr) { return rr.catKey === r.catKey; });
+    openMedia(r, peers, peers.indexOf(r));
+  }
+
+  // Prev/next inside the open modal — cycles through the peer list, updates
+  // the video src/title/badge without closing or re-pushing history.
+  function modalStep(delta) {
+    if (!state.modalOpen) return;
+    var peers = state.modalPeers;
+    if (!peers || peers.length <= 1) return;
+    var idx = (state.modalPeerIdx || 0) + delta;
+    if (idx < 0) idx = peers.length - 1;
+    if (idx >= peers.length) idx = 0;
+    openMedia(peers[idx], peers, idx);
+  }
 
   function closeReel(fromPop) {
     var m = $('reelModal');
@@ -589,6 +712,8 @@
       else if (a === 'about') { state.about = !state.about; render(); }
       else if (a === 'reset') { state.sent = false; render(); }
       else if (a === 'closeReel') { closeReel(); }
+      else if (a === 'reelPrev') { modalStep(-1); }
+      else if (a === 'reelNext') { modalStep(1); }
       return true;
     }
 
@@ -618,7 +743,8 @@
     if (play) {
       var cat = play.getAttribute('data-stack-play');
       var reels = REELS.filter(function (r) { return r.catKey === cat; });
-      openMedia(reels[state.stackActive[cat] || 0]);
+      var pIdx = state.stackActive[cat] || 0;
+      openMedia(reels[pIdx], reels, pIdx);
       return true;
     }
 
@@ -629,10 +755,9 @@
       var reels2 = REELS.filter(function (r) { return r.catKey === ccat; });
       var currentActive = state.stackActive[ccat] || 0;
       if (idx === currentActive) {
-        openMedia(reels2[idx]);
+        openMedia(reels2[idx], reels2, idx);
       } else {
-        state.stackActive[ccat] = idx;
-        updateDeck(ccat);
+        setStackFloat(ccat, idx, true);
       }
       return true;
     }
@@ -664,8 +789,13 @@
         onActivate(el);
       }
     }
-    // Arrow-key deck navigation when a card in a deck has focus
+    // Arrow keys: modal prev/next when modal is open, deck nav otherwise
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      if (state.modalOpen) {
+        modalStep(e.key === 'ArrowLeft' ? -1 : 1);
+        e.preventDefault();
+        return;
+      }
       var focused = document.activeElement;
       if (focused && focused.hasAttribute && focused.hasAttribute('data-stack-card')) {
         var cat = focused.getAttribute('data-stack-card').split(':')[0];
@@ -674,6 +804,32 @@
       }
     }
   });
+
+  // Mobile horizontal-swipe on the modal → prev/next reel. Bubbling means we can
+  // observe the touch even though the native <video> also gets it — we only act
+  // on release, and only if the gesture was clearly horizontal, so play/pause
+  // taps and scrubbing keep working.
+  (function bindModalSwipe() {
+    var modal = $('reelModal');
+    if (!modal) return;
+    var sx = 0, sy = 0, st = 0, tracking = false;
+    modal.addEventListener('touchstart', function (e) {
+      if (!state.modalOpen) return;
+      if (e.touches.length !== 1) return;
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+      st = Date.now(); tracking = true;
+    }, { passive: true });
+    modal.addEventListener('touchend', function (e) {
+      if (!tracking) return;
+      tracking = false;
+      var t = e.changedTouches[0];
+      var dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Date.now() - st > 600) return;                  // too slow
+      if (Math.abs(dx) < 60) return;                      // too short
+      if (Math.abs(dx) < Math.abs(dy) * 1.4) return;      // too vertical
+      modalStep(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  })();
 
   // Contact form
   var CONTACT_ENDPOINT = 'https://formsubmit.co/ajax/shafishams08@gmail.com';

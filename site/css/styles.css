@@ -179,6 +179,22 @@ body.is-narrow .about-wide { display: none !important; }
   display: flex;
   flex-direction: column;
 }
+
+/* While actively dragging/wheeling, cards follow input 1:1 with a tiny */
+/* smoothing to avoid jitter — no big spring bounce. */
+.deck.is-dragging .deck-card {
+  transition:
+    transform 60ms linear,
+    opacity 60ms linear,
+    filter  60ms linear;
+}
+/* Mid-drag re-render when the underlying float changes (via wheel snap tick etc.) */
+.stack.is-drag-anim .deck .deck-card {
+  transition:
+    transform 180ms cubic-bezier(.2, .8, .3, 1),
+    opacity 140ms ease,
+    filter  140ms ease;
+}
 .deck-card.is-active {
   border: 2px solid #EE1B24;
   box-shadow: 0 16px 60px rgba(238, 27, 36, .28), 0 4px 18px rgba(0, 0, 0, .6);
@@ -321,3 +337,31 @@ body.is-narrow .deck-nav { width: 100%; justify-content: space-between; }
 .contact-row:hover { transform: translateX(4px); }
 .contact-cta { transition: color .18s ease; }
 .contact-row:hover .contact-cta { color: #ff5b61; }
+
+/* Reel modal prev/next arrows — visible on both desktop and mobile.
+   Positioned on the modal edges outside the video frame. */
+.reel-modal-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .28);
+  background: rgba(6, 6, 6, .6);
+  backdrop-filter: blur(6px);
+  color: #F2F2F2;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1002;
+  transition: background .18s, border-color .18s, transform .18s;
+}
+.reel-modal-arrow.prev { left: clamp(8px, 2vw, 20px); }
+.reel-modal-arrow.next { right: clamp(8px, 2vw, 20px); }
+.reel-modal-arrow:hover {
+  background: rgba(238, 27, 36, .18);
+  border-color: #EE1B24;
+  color: #EE1B24;
+}
+.reel-modal-arrow:active { transform: translateY(-50%) scale(.94); }
+body.is-narrow .reel-modal-arrow { width: 40px; height: 40px; }
